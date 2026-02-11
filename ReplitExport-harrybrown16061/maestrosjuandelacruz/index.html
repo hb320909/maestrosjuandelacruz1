@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Residencia Escolar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hover-scale { transition: transform 0.2s ease-in-out; }
+        .hover-scale:hover { transform: scale(1.05); }
+        
+        /* Birthday celebration animation */
+        @keyframes birthdayPop { 
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes confetti {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .birthday-modal-content { animation: birthdayPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .confetti-piece { animation: confetti 3s ease-in forwards; }
+    </style>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./app.js"></script>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md fade-in">
+            <div class="text-center mb-8">
+                <i class="fas fa-school text-4xl text-indigo-600 mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-800">Portal de Residencia Escolar</h1>
+                <p class="text-gray-600 mt-2">Acceso para maestros</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
+                    <input type="text" id="username" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Usuario" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" id="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Contraseña" required>
+                </div>
+                
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors hover-scale">
+                    Iniciar Sesión
+                </button>
+            </form>
+            
+            <div id="loginError" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <!-- Birthday Celebration Modal -->
+        <div id="birthdayModal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-[9999] flex items-center justify-center p-4">
+            <div class="birthday-modal-content bg-gradient-to-b from-pink-400 to-purple-500 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center relative overflow-hidden">
+                <!-- Confetti container -->
+                <div id="confettiContainer" class="absolute inset-0 pointer-events-none"></div>
+                
+                <div class="relative z-10">
+                    <div class="mb-4 text-6xl animate-bounce">🎉</div>
+                    <h2 class="text-4xl font-bold text-white mb-4">¡Cumpleaños!</h2>
+                    <p id="birthdayMessage" class="text-2xl font-semibold text-white mb-6"></p>
+                    <p class="text-white text-lg mb-8">que tengas un maravilloso día</p>
+                    
+                    <div class="flex gap-3 justify-center">
+                        <button onclick="closeBirthdayModal()" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-check mr-2"></i>¡Qué disfrute!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-800 via-blue-700 to-indigo-800 shadow-lg border-b-4 border-indigo-900">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-20">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-white rounded-full p-1 shadow-lg" style="width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                            <svg id="fallbackLogo" class="h-16 w-16" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="display:block;">
+                                <!-- Background circle -->
+                                <circle cx="100" cy="100" r="95" fill="#0F4C75" stroke="white" stroke-width="3"/>
+                                
+                                <!-- Top arc background -->
+                                <path d="M 40 100 Q 40 50 100 40 Q 160 50 160 100" fill="#0F4C75" stroke="white" stroke-width="2"/>
+                                
+                                <!-- Decorative leaves/wheat at top -->
+                                <g fill="white">
+                                    <!-- Left leaf -->
+                                    <ellipse cx="75" cy="55" rx="4" ry="12" fill="white"/>
+                                    <path d="M 73 60 Q 72 68 74 75 M 75 60 Q 75 68 75 75 M 77 60 Q 78 68 76 75" stroke="white" stroke-width="1.5" fill="none"/>
+                                    
+                                    <!-- Center leaf -->
+                                    <ellipse cx="100" cy="45" rx="4" ry="14" fill="white"/>
+                                    <path d="M 98 60 Q 97 70 99 80 M 100 60 Q 100 70 100 80 M 102 60 Q 103 70 101 80" stroke="white" stroke-width="1.5" fill="none"/>
+                                    
+                                    <!-- Right leaf -->
+                                    <ellipse cx="125" cy="55" rx="4" ry="12" fill="white"/>
+                                    <path d="M 123 60 Q 122 68 124 75 M 125 60 Q 125 68 125 75 M 127 60 Q 128 68 126 75" stroke="white" stroke-width="1.5" fill="none"/>
+                                </g>
+                                
+                                <!-- Main text MJC -->
+                                <text x="100" y="125" font-size="56" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial, sans-serif" letter-spacing="4">MJC</text>
+                                
+                                <!-- Bottom wave decoration -->
+                                <path d="M 40 140 Q 50 135 60 140 T 80 140 T 100 140 T 120 140 T 140 140 T 160 140" 
+                                      stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                <path d="M 40 150 Q 50 145 60 150 T 80 150 T 100 150 T 120 150 T 140 150 T 160 150" 
+                                      stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                
+                                <!-- School name arc bottom -->
+                                <text x="100" y="175" font-size="10" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial, sans-serif" letter-spacing="1.5">MAESTRO JUAN DE LA CRUZ</text>
+                                <text x="100" y="190" font-size="8" fill="white" text-anchor="middle" font-family="Arial, sans-serif">ALBOX</text>
+                                
+                                <!-- Stars decoration -->
+                                <g fill="white">
+                                    <circle cx="85" cy="177" r="1.5"/>
+                                    <circle cx="100" cy="177" r="1.5"/>
+                                    <circle cx="115" cy="177" r="1.5"/>
+                                </g>
+                            </svg>
+                            <img id="mainLogo" src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBtZWV0Ij4NCiAgPCEtLSBCYWNrZ3JvdW5kIGNpcmNsZSAtLT4NCiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NSIgZmlsbD0iIzBGNEM3NSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIi8+DQogIA0KICA8IS0tIFRvcCBhcmMgYmFja2dyb3VuZCAtLT4NCiAgPHBhdGggZD0iTSA0MCAxMDAgUSA0MCA1MCAxMDAgNDAgUSAxNjAgNTAgMTYwIDEwMCIgZmlsbD0iIzBGNEM3NSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+DQogIA0KICA8IS0tIERlY29yYXRpdmUgbGVhdmVzL3doZWF0IGF0IHRvcCAtLT4NCiAgPGcgZmlsbD0id2hpdGUiPg0KICAgIDwhLS0gTGVmdCBsZWFmIC0tPg0KICAgIDxlbGxpcHNlIGN4PSI3NSIgY3k9IjU1IiByeD0iNCIgcnk9IjEyIiBmaWxsPSJ3aGl0ZSIvPg0KICAgIDxwYXRoIGQ9Ik0gNzMgNjAgUSA3MiA2OCA3NCA3NSBNIDc1IDYwIFEgNzUgNjggNzUgNzUgTSA3NyA2MCBRIDc4IDY4IDc2IDc1IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIvPg0KICAgIA0KICAgIDwhLS0gQ2VudGVyIGxlYWYgLS0+DQogICAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjQ1IiByeD0iNCIgcnk9IjE0IiBmaWxsPSJ3aGl0ZSIvPg0KICAgIDxwYXRoIGQ9Ik0gOTggNjAgUSA5NyA3MCA5OSA4MCBNIDEwMCA2MCBRIDEwMCA3MCAxMDAgODAgTSAxMDIgNjAgUSAxMDMgNzAgMTAxIDgwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIvPg0KICAgIA0KICAgIDwhLS0gUmlnaHQgbGVhZiAtLT4NCiAgICA8ZWxsaXBzZSBjeD0iMTI1IiBjeT0iNTUiIHJ4PSI0IiByeT0iMTIiIGZpbGw9IndoaXRlIi8+DQogICAgPHBhdGggZD0iTSAxMjMgNjAgUSAxMjIgNjggMTI0IDc1IE0gMTI1IDYwIFEgMTI1IDY4IDEyNSA3NSBNIDEyNyA2MCBRIDEyOCA2OCAxMjYgNzUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIi8+DQogIDwvZz4NCiAgDQogIDwhLS0gTWFpbiB0ZXh0IE1KQyAtLT4NCiAgPHRleHQgeD0iMTAwIiB5PSIxMjUiIGZvbnQtc2l6ZT0iNTYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iNCI+TUpDPC90ZXh0Pg0KICANCiAgPCEtLSBCb3R0b20gd2F2ZSBkZWNvcmF0aW9uIC0tPg0KICA8cGF0aCBkPSJNIDQwIDE0MCBRIDUwIDEzNSA2MCAxNDAgVCA4MCAxNDAgVCAxMDAgMTQwIFQgMTIwIDE0MCBUIDE0MCAxNDAgVCAxNjAgMTQwIiANCiAgICAgICAgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPg0KICA8cGF0aCBkPSJNIDQwIDE1MCBRIDUwIDE0NSA2MCAxNTAgVCA4MCAxNTAgVCAxMDAgMTUwIFQgMTIwIDE1MCBUIDE0MCAxNTAgVCAxNjAgMTUwIiANCiAgICAgICAgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPg0KICANCiAgPCEtLSBTY2hvb2wgbmFtZSBhcmMgYm90dG9tIC0tPg0KICA8dGV4dCB4PSIxMDAiIHk9IjE3NSIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGxldHRlci1zcGFjaW5nPSIxLjUiPk1BRVNUUk8gSlVBTiBERSBMQSBDUlVaPC90ZXh0Pg0KICA8dGV4dCB4PSIxMDAiIHk9IjE5MCIgZm9udC1zaXplPSI4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIj5BTEJPWDwvdGV4dD4NCiAgDQogIDwhLS0gU3RhcnMgZGVjb3JhdGlvbiAtLT4NCiAgPGcgZmlsbD0id2hpdGUiPg0KICAgIDxjaXJjbGUgY3g9Ijg1IiBjeT0iMTc3IiByPSIxLjUiLz4NCiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxNzciIHI9IjEuNSIvPg0KICAgIDxjaXJjbGUgY3g9IjExNSIgY3k9IjE3NyIgcj0iMS41Ii8+DQogIDwvZz4NCjwvc3ZnPg0K" alt="MJC Logo" class="h-16 w-16 object-cover rounded-full" style="display:none;">
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">Residencia Escolar MJC</h1>
+                            <p class="text-blue-100 text-sm">Maestro Juan De La Cruz</p>
+                        </div>
+                    </div>
+                    
+                    <nav class="hidden md:flex space-x-8">
+                        <a href="#" class="nav-link text-blue-100 hover:text-white font-medium transition-colors" data-section="dashboard">Inicio</a>
+                        <a href="#" class="nav-link text-blue-100 hover:text-white font-medium transition-colors" data-section="alumnos">Alumnos</a>
+                        <a href="#" class="nav-link text-blue-100 hover:text-white font-medium transition-colors" data-section="habitaciones">Habitaciones</a>
+                        <a href="#" class="nav-link text-blue-100 hover:text-white font-medium transition-colors" data-section="faltas">Faltas</a>
+                        <a href="#" class="nav-link text-blue-100 hover:text-white font-medium transition-colors" data-section="partes">Partes</a>
+                        <a href="#" class="nav-link text-blue-100 hover:text-white font-medium transition-colors" data-section="seguimiento">Seguimiento</a>
+                        <a href="#" class="nav-link text-blue-100 hover:text-white font-medium transition-colors" data-section="agenda">Agenda Deberes</a>
+                        <a href="#" class="nav-link text-blue-100 hover:text-white font-medium transition-colors" data-section="contacto">Contacto</a>
+                    </nav>
+                    
+                    <div class="flex items-center space-x-4">
+                        <span id="currentUser" class="text-sm text-blue-100"></span>
+                        <button id="logoutBtn" class="text-blue-200 hover:text-white font-medium transition-colors">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Mobile Navigation -->
+        <nav class="md:hidden bg-gradient-to-r from-blue-700 to-indigo-700 shadow-md border-b-2 border-indigo-900">
+            <div class="max-w-7xl mx-auto px-4">
+                <select id="mobileNav" class="w-full py-3 text-white bg-blue-700 focus:outline-none font-medium">
+                    <option value="dashboard">📊 Inicio</option>
+                    <option value="alumnos">👥 Alumnos</option>
+                    <option value="habitaciones">🏠 Habitaciones</option>
+                    <option value="faltas">❌ Faltas</option>
+                    <option value="partes">📋 Partes</option>
+                    <option value="seguimiento">📈 Seguimiento</option>
+                    <option value="agenda">📚 Agenda Deberes</option>
+                    <option value="contacto">📞 Contacto</option>
+                </select>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Bienvenido al portal de la Residencia Escolar</h2>
+                    <p class="text-gray-600">Gestione de manera eficiente todos los aspectos de la residencia</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total de Alumnos</p>
+                                <p id="totalAlumnos" class="text-3xl font-bold text-indigo-600">0</p>
+                            </div>
+                            <i class="fas fa-users text-3xl text-indigo-200"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Habitaciones Ocupadas</p>
+                                <p id="habitacionesOcupadas" class="text-3xl font-bold text-green-600">0</p>
+                            </div>
+                            <i class="fas fa-bed text-3xl text-green-200"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Faltas Registradas</p>
+                                <p id="totalFaltas" class="text-3xl font-bold text-red-600">0</p>
+                            </div>
+                            <i class="fas fa-exclamation-triangle text-3xl text-red-200"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
+                    <div id="actividadReciente" class="space-y-3">
+                        <p class="text-gray-500 text-center py-8">No hay actividad reciente</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alumnos Section -->
+            <section id="alumnos" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Gestión de Alumnos</h2>
+                    <p class="text-gray-600">Administre el registro y asignación de alumnos</p>
+                </div>
+                
+                <!-- Add Student Form -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Añadir Nuevo Alumno</h3>
+                    <form id="addStudentForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                            <input type="text" id="studentNombre" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de nacimiento</label>
+                            <input type="date" id="studentNacimiento" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                        </div>
+
+                        <div class="flex items-center pl-2">
+                            <input type="checkbox" id="studentMayor16" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+                            <label for="studentMayor16" class="ml-2 text-sm text-gray-700">Mayor de 16 años</label>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Género</label>
+                            <select id="studentGenero" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar género</option>
+                                <option value="hombre">Hombre</option>
+                                <option value="mujer">Mujer</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Curso</label>
+                            <select id="studentCurso" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar curso</option>
+                                <option value="1º ESO">1º ESO</option>
+                                <option value="2º ESO">2º ESO</option>
+                                <option value="3º ESO">3º ESO</option>
+                                <option value="4º ESO">4º ESO</option>
+                                <option value="1º Bachillerato">1º Bachillerato</option>
+                                <option value="2º Bachillerato">2º Bachillerato</option>
+                                <!-- Formación Profesional añadida -->
+                                <option value="1º SMR">1º SMR</option>
+                                <option value="2º SMR">2º SMR</option>
+                                <option value="FPB Peluquería">FPB Peluquería</option>
+                                <option value="1º FPGM Peluquería">1º FPGM Peluquería</option>
+                                <option value="2º FPGM Peluquería">2º FPGM Peluquería</option>
+                                <!-- Cursos de Primaria -->
+                                <option value="1º Primaria">1º Primaria</option>
+                                <option value="2º Primaria">2º Primaria</option>
+                                <option value="3º Primaria">3º Primaria</option>
+                                <option value="4º Primaria">4º Primaria</option>
+                                <option value="5º Primaria">5º Primaria</option>
+                                <option value="6º Primaria">6º Primaria</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Replaced last name and email with two phone numbers -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono principal</label>
+                            <input type="tel" id="studentTelefono1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Teléfono principal" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono secundario</label>
+                            <input type="tel" id="studentTelefono2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Teléfono secundario (opcional)">
+                        </div>
+                        
+                        <!-- Permisos -->
+                        <div class="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <h4 class="text-sm font-medium text-gray-800 mb-2">Permisos</h4>
+                            <div class="flex items-center gap-4 mb-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="permisoSalida" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+                                    <label for="permisoSalida" class="ml-2 text-sm text-gray-700">Salida (+16)</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="permisoActividadExtra" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+                                    <label for="permisoActividadExtra" class="ml-2 text-sm text-gray-700">Salida a actividad extra</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="permisoFumar" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+                                    <label for="permisoFumar" class="ml-2 text-sm text-gray-700">Permiso fumar</label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Notas / extras</label>
+                                <textarea id="permisosExtras" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Información adicional sobre permisos (opcional)"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Añadir Alumno
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Students List -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Alumnos Registrados</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Nombre</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Fecha Nac.</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Edad</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Género</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Curso</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Teléfonos</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Habitación</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-8 text-gray-500">No hay alumnos registrados</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Habitaciones Section -->
+            <section id="habitaciones" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Gestión de Habitaciones</h2>
+                    <p class="text-gray-600">Asigne y gestione las habitaciones de los alumnos</p>
+                </div>
+                
+                <!-- Room Assignment Form -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Asignar Habitación</h3>
+                    <form id="assignRoomForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alumno</label>
+                            <select id="roomStudent" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar alumno</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Habitación</label>
+                            <select id="roomNumber" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar habitación</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cama</label>
+                            <select id="roomBed" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar cama</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-end">
+                            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-bed mr-2"></i>Asignar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Rooms Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="roomsGrid">
+                    <!-- Rooms will be dynamically generated -->
+                </div>
+            </section>
+
+            <!-- Faltas Section -->
+            <section id="faltas" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Registro de Faltas</h2>
+                    <p class="text-gray-600">Registre y gestione las faltas e incidencias</p>
+                </div>
+                
+                <!-- Add Absence Form -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Registrar Falta</h3>
+                    <form id="addAbsenceForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alumno</label>
+                            <select id="absenceStudent" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar alumno</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+                            <input type="date" id="absenceDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción de la falta</label>
+                            <textarea id="absenceDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required></textarea>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                                <i class="fas fa-exclamation-circle mr-2"></i>Registrar Falta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Filter Controls -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por alumno</label>
+                            <select id="filterStudent" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por fecha</label>
+                            <input type="date" id="filterDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        </div>
+                        
+                        <div class="flex items-end">
+                            <button id="clearFilters" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-times mr-2"></i>Limpiar filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Absences List -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Faltas Registradas</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Alumno</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Fecha</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Descripción</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="absencesTableBody">
+                                <tr>
+                                    <td colspan="4" class="text-center py-8 text-gray-500">No hay faltas registradas</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Partes Section -->
+            <section id="partes" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Registro de Partes</h2>
+                    <p class="text-gray-600">Registre partes disciplinarios asociados a los alumnos</p>
+                </div>
+
+                <!-- Add Report Form -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Registrar Parte</h3>
+                    <form id="addReportForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alumno</label>
+                            <select id="reportStudent" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar alumno</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+                            <input type="date" id="reportDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                            <select id="reportType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar tipo</option>
+                                <option value="Leve">Leve</option>
+                                <option value="Grave">Grave</option>
+                            </select>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                            <textarea id="reportDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required></textarea>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                                <i class="fas fa-flag mr-2"></i>Registrar Parte
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Reports List -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Partes Registrados</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Alumno</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Fecha</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Tipo</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Descripción</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-700">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center py-8 text-gray-500">No hay partes registrados</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seguimiento Académico Section -->
+            <section id="seguimiento" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Seguimiento Académico</h2>
+                    <p class="text-gray-600">Registre calificaciones y observaciones por alumno</p>
+                </div>
+
+                <!-- Selector de alumno para el resumen -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Seleccionar alumno para ver su resumen</label>
+                    <select id="alumnoResumenSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="">-- Seleccionar alumno --</option>
+                    </select>
+                </div>
+
+                <!-- Resumen del alumno -->
+                <div id="alumnoResumenCard" class="hidden mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <!-- Nombre del alumno -->
+                        <div class="bg-indigo-50 border-2 border-indigo-300 rounded-lg p-6 md:col-span-4">
+                            <p class="text-sm font-medium text-gray-600 mb-2">Alumno Seleccionado</p>
+                            <p id="alumnoResumenNombre" class="text-2xl font-bold text-indigo-800"></p>
+                        </div>
+                        
+                        <!-- Faltas -->
+                        <div class="bg-red-50 border-2 border-red-300 rounded-lg p-6 text-center">
+                            <p class="text-sm font-medium text-gray-600 mb-2">Faltas</p>
+                            <p id="alumnoResumenFaltas" class="text-4xl font-bold text-red-800 mb-2">0</p>
+                            <p class="text-sm text-red-700 font-semibold">registros</p>
+                        </div>
+                        
+                        <!-- Partes disciplinarios -->
+                        <div class="bg-orange-50 border-2 border-orange-300 rounded-lg p-6 text-center">
+                            <p class="text-sm font-medium text-gray-600 mb-2">Partes Disciplinarios</p>
+                            <p id="alumnoResumenPartes" class="text-4xl font-bold text-orange-800 mb-2">0</p>
+                            <p class="text-sm text-orange-700 font-semibold">registros</p>
+                        </div>
+                        
+                        <!-- Asignaturas suspensas -->
+                        <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center">
+                            <p class="text-sm font-medium text-gray-600 mb-2">Asignaturas Suspensas</p>
+                            <p id="alumnoResumenSuspensas" class="text-4xl font-bold text-yellow-800 mb-2">0</p>
+                            <p class="text-sm text-yellow-700 font-semibold">total</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Añadir registro académico</h3>
+                    <form id="addSeguimientoForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alumno</label>
+                            <select id="seguimientoStudent" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                                <option value="">Seleccionar alumno</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Asignatura</label>
+                            <input type="text" id="seguimientoAsignatura" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Asignatura" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+                            <input type="date" id="seguimientoFecha" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                            <select id="seguimientoTipo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="Evaluación">Evaluación</option>
+                                <option value="Tarea">Tarea</option>
+                                <option value="Observación">Observación</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nota</label>
+                            <input type="text" id="seguimientoNota" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Nota / valoración">
+                        </div>
+
+                        <div class="md:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Comentarios</label>
+                            <textarea id="seguimientoComentarios" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Comentarios adicionales (opcional)"></textarea>
+                        </div>
+
+                        <div class="md:col-span-3">
+                            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Agregar registro
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Asignaturas suspensas por trimestre</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="seguimientoSummary">
+                        <!-- Resumen de suspensas será generado dinámicamente -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Agenda Deberes Section -->
+            <section id="agenda" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Agenda de Deberes</h2>
+                    <p class="text-gray-600">Deberes por estudio. Se muestra la semana actual y se guarda por semana automáticamente.</p>
+                </div>
+
+                <!-- Week Navigation -->
+                <div class="bg-white p-4 rounded-lg border border-gray-200 mb-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <button onclick="previousWeek()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-semibold transition-colors">
+                            <i class="fas fa-chevron-left mr-2"></i>Semana Anterior
+                        </button>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600">Semana seleccionada:</p>
+                            <p id="weekSelector" class="text-lg font-semibold text-gray-800">-</p>
+                        </div>
+                        <button onclick="nextWeek()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-semibold transition-colors">
+                            Semana Siguiente<i class="fas fa-chevron-right ml-2"></i>
+                        </button>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="goToCurrentWeek()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                            <i class="fas fa-calendar-day mr-2"></i>Ir a la semana actual
+                        </button>
+                        <button onclick="openReviewPanel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                            <i class="fas fa-eye mr-2"></i>Revisar Historial
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Review Panel Modal -->
+                <div id="reviewPanel" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
+                        <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+                            <h3 class="text-2xl font-bold text-gray-800">Revisar Historial de Deberes</h3>
+                            <button onclick="closeReviewPanel()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="p-6">
+                            <div id="reviewContent">
+                                <!-- Contenido generado dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="agendaGrid" class="mb-6">
+                    <!-- Contenido generado dinámicamente -->
+                </div>
+
+                <!-- Archive Info -->
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-6">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>Archivo de deberes:</strong> Puedes ver y editar deberes de semanas anteriores. Los cambios se guardan automáticamente en el archivo histórico.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Contacto Section -->
+            <section id="contacto" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Contacto</h2>
+                    <p class="text-gray-600">Información de contacto y emergencias</p>
+                </div>
+                
+                    <div class="grid grid-cols-1 md:grid-cols-1 gap-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Información de Contacto</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-phone text-indigo-600"></i>
+                                    <span class="text-gray-700">+34 671 59 66 42</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-map-marker-alt text-indigo-600"></i>
+                                    <span class="text-gray-700">C. taberno, 04800  Albox, Almería</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </section>
+        </main>
+    </div>
+
+
+    <script>
+        // Logo loading handler - try to load logo.svg, if fails show SVG fallback
+        const logoImg = document.getElementById('mainLogo');
+        const fallbackSvg = document.getElementById('fallbackLogo');
+        
+        if (logoImg) {
+            logoImg.onerror = function() {
+                // If image fails to load, hide it and show SVG fallback
+                logoImg.style.display = 'none';
+                fallbackSvg.style.display = 'block';
+            };
+            
+            // Try loading the image
+            logoImg.src = 'logo.svg';
+            
+            // Check if image loaded successfully (optional: set timeout fallback)
+            setTimeout(() => {
+                if (!logoImg.complete || logoImg.naturalHeight === 0) {
+                    logoImg.style.display = 'none';
+                    fallbackSvg.style.display = 'block';
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

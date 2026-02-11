@@ -1,0 +1,114 @@
+:root{
+  --indigo: #4f46e5;
+  --muted: #6b7280;
+  --card-shadow: 0 10px 30px rgba(2,6,23,0.06);
+  --glass: rgba(255,255,255,0.75);
+  --header-bg: linear-gradient(to right, #1e3a8a, #1e40af, #4f46e5);
+}
+
+/* Page background enhancement */
+body {
+  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 60%);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Header styling */
+header {
+  background: var(--header-bg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Navigation links - blue header styling */
+.nav-link {
+  position: relative;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: all 200ms ease;
+}
+
+.nav-link:hover {
+  border-bottom-color: white;
+  transform: translateY(-2px);
+}
+
+/* Mobile navigation styling */
+#mobileNav {
+  color: white;
+}
+
+#mobileNav option {
+  background: #1e3a8a;
+  color: white;
+}
+
+/* Make existing rounded-xl cards look more elevated */
+.rounded-xl {
+  box-shadow: var(--card-shadow);
+}
+
+/* Slightly stronger hover lift for interactive cards */
+.bg-white.rounded-xl:hover {
+  transform: translateY(-4px);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  box-shadow: 0 18px 40px rgba(2,6,23,0.08);
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  background: transparent;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 180ms ease, background 180ms ease;
+}
+.nav-link:hover::after {
+  transform: scaleX(1);
+  background: var(--indigo);
+}
+
+/* Table improvements */
+table th {
+  background: #f8fafc;
+  color: #374151;
+}
+
+table td, table th {
+  padding: 0.75rem 1rem;
+}
+
+table tr:hover td {
+  background: #fbfdff;
+}
+
+/* Buttons: subtle lift */
+button {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(2,6,23,0.06);
+}
+
+/* Activity log style */
+#actividadReciente > div {
+  border-left: 3px solid rgba(79,70,229,0.12);
+}
+
+/* Reports and other small tweaks */
+#reportsTableBody td, #absencesTableBody td, #studentsTableBody td {
+  vertical-align: middle;
+}
+
+/* Responsive tweaks for rooms grid sections */
+@media (max-width: 768px) {
+  .grid-cols-1\@md\:grid-cols-2 { grid-template-columns: repeat(1, minmax(0,1fr)); }
+}
+
+/* Make small metadata badges slightly more visible */
+span[role="badge"], .px-3.py-1.rounded-full {
+  box-shadow: 0 2px 8px rgba(2,6,23,0.04);
+}
